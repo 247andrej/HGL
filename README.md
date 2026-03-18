@@ -165,6 +165,19 @@ choice !GUIshouldclose = 0 -> 10
     endGUI
     change x add !dx
     change y add !dy
+
+    choice !x > 380 -> 30
+        change dx mul -1
+    30
+    choice !x < 20 -> 31
+        change dx mul -1
+    31
+    choice !y > 380 -> 32
+        change dy mul -1
+    32
+    choice !y < 20 -> 33
+        change dy mul -1
+    33
     goto 20
 10
 closeGUI
