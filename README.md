@@ -22,29 +22,30 @@ HGL is line-based — one instruction per line. No semicolons, no brackets, no n
 
 - `!var` — get a variable's value
 - `@list[0]` — get a list item by index
+- `@func{arg}` — get a function argument value
 - `$var` — get the length of a list or string (returns length - 1, index-friendly)
 - Line numbers are optional, but required for `goto` and `choice` jumps
 
 ```
-setupGUI 400 400 MyWindow
+gui setup 400 400 MyWindow
 var int x 200
 var int y 200
 
 20
 choice !GUIshouldclose = 0 -> 10
-    clearBkg black
-    updateGUI
+    gui clear niceblue
+    gui update
     draw circle !x !y 25 green
-    key left held -> 30
+    gui key left held -> 30
         change x sub 3
     30
-    key right held -> 31
+    gui key right held -> 31
         change x add 3
     31
-    endGUI
+    gui end
     goto 20
 10
-closeGUI
+gui close
 ```
 
 ---
@@ -74,6 +75,8 @@ closeGUI
 | `mul` | Multiply |
 | `div` | Divide |
 | `sin !var` | Set to sin of a variable |
+| `cos !var` | Set to cos of a variable |
+| `sqrt` | Square root of current value |
 | `random min max` | Set to random integer between min and max |
 
 ### Control Flow
@@ -81,39 +84,54 @@ closeGUI
 |---|---|
 | `goto N` | Jump to line number N |
 | `goto` | Skip the next line |
-| `choice !a = !b -> N` | Jump to N if condition is **false** |
+| `choice !a = !b -> N` | Jump to line N if condition is **false** |
 | `choice !a < !b -> N` | Jump to N if a is not less than b |
 | `choice !a > !b -> N` | Jump to N if a is not greater than b |
+| `choice !a = !b <- N` | Skip N lines if condition is **false** |
 
-> `choice` jumps when the condition is **false** — use it as "if NOT this, skip to N"
+> `choice` jumps/skips when the condition is **false** — use it as "if NOT this, go to N"
 
 ### Functions
 ```
 define func myFunc
     show hello
-    change x add 1
+endf
+
+define func myFuncWithArgs <- x y
+    show @myFuncWithArgs{x}
+    show @myFuncWithArgs{y}
 endf
 
 call myFunc
+call myFuncWithArgs <- 10 20
 ```
-All variables are global — no arguments or return values needed.
+All variables are global — function arguments are accessed with `@funcName{argName}` syntax.
 
-### Keyboard Input
+### Lists
+```
+var list items apple banana cherry
+var int i 0
+show @items[0]          # prints: apple
+show $items             # prints: 2 (last valid index)
+edit items change 1 grape
+edit items remove 0
+```
+
+### GUI
 | Syntax | Description |
 |---|---|
-| `key a held -> N` | Jump to N if key is NOT held |
-| `key space notheld -> N` | Jump to N if key IS held |
+| `gui setup width height title` | Open a window |
+| `gui update` | Begin a new frame |
+| `gui end` | End the frame |
+| `gui close` | Close the window |
+| `gui clear color` | Fill background |
+| `gui color name hexvalue` | Define a custom color from a hex integer |
+| `gui key a held -> N` | Jump to N if key is NOT held |
+| `gui key space notheld -> N` | Jump to N if key IS held |
 
-Supported keys: `a-z`, `0-9`, `up`, `down`, `left`, `right`, `space`, `enter`, `escape`, `backspace`, `tab`, `shift`, `ctrl`, `alt`, `f1-f12`
-
-### Graphics
+### Drawing
 | Syntax | Description |
 |---|---|
-| `setupGUI width height title` | Open a window |
-| `updateGUI` | Begin a new frame |
-| `endGUI` | End the frame |
-| `closeGUI` | Close the window |
-| `clearBkg color` | Fill background |
 | `draw circle x y radius color` | Draw a circle |
 | `draw rect x y width height color` | Draw a rectangle |
 | `draw line x1 y1 x2 y2 color` | Draw a line |
@@ -129,8 +147,15 @@ Supported keys: `a-z`, `0-9`, `up`, `down`, `left`, `right`, `space`, `enter`, `
 |---|---|
 | `!GUIshouldclose` | `1` when the window X button is clicked |
 
-### Colors
-`black`, `white`, `blue`, `green`, `gray`, `brown`, `purple`, `darkgreen`, `darkgray`, `darkbrown`, `darkpurple`
+### Built-in Colors
+`black`, `white`, `blue`, `green`, `gray`, `brown`, `purple`, `darkgreen`, `darkgray`, `darkbrown`, `darkpurple`, `niceblue`
+
+### Custom Colors
+```
+gui color mycolor 324234423
+gui clear mycolor
+draw circle 200 200 50 mycolor
+```
 
 ---
 
@@ -149,50 +174,63 @@ choice !i < $items -> 20
 20
 ```
 
-### Bouncing Circle
+### Functions with Arguments
 ```
-setupGUI 400 400 Bounce
-var int x 200
-var int y 200
-var int dx 3
-var int dy 2
-
-20
-choice !GUIshouldclose = 0 -> 10
-    clearBkg black
-    updateGUI
-    draw circle !x !y 20 green
-    endGUI
-    change x add !dx
-    change y add !dy
-
-    choice !x > 380 -> 30
-        change dx mul -1
-    30
-    choice !x < 20 -> 31
-        change dx mul -1
-    31
-    choice !y > 380 -> 32
-        change dy mul -1
-    32
-    choice !y < 20 -> 33
-        change dy mul -1
-    33
-    goto 20
-10
-closeGUI
-```
-
-### Functions
-```
-var int score 0
-
-define func addScore
-    change score add 10
-    show !score
+define func greet <- name
+    show @greet{name}
 endf
 
-call addScore
-call addScore
-call addScore
+call greet <- world
+call greet <- HGL
+```
+
+### Pong
+```
+gui setup 600 400 pong
+var int plX 20
+var int plY 100
+var int plVel 6
+var int plYb 180
+var int ballX 100
+var int ballY 100
+var int ballXv 4
+var int ballYv 4
+
+2
+choice !GUIshouldclose = 0 -> 1
+gui update
+gui clear black
+gui key w held -> 10
+    change plY sub !plVel
+    change plYb sub !plVel
+10
+gui key s held -> 11
+    change plY add !plVel
+    change plYb add !plVel
+11
+draw rect !plX !plY 20 80 white
+draw circle !ballX !ballY 10 white
+change ballX add !ballXv
+change ballY add !ballYv
+choice !ballY > 390 -> 20
+    change ballYv mul -1
+20
+choice !ballY < 10 -> 21
+    change ballYv mul -1
+21
+choice !ballX > 590 -> 22
+    change ballXv mul -1
+22
+choice !ballX < 0 -> 23
+    goto 1
+23
+choice !ballX < 50 -> 24
+choice !ballY > !plY -> 24
+choice !ballY < !plYb -> 24
+    change ballXv mul -1
+24
+gui end
+goto 2
+1
+gui close
 ```
