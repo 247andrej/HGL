@@ -1,5 +1,5 @@
 # HGL — Hyperpower Graphics Language
-A simple, QBasic-inspired graphics programming language for Linux. Write `.hgl` files, run them with the `hgl` executable — no Python required.
+A simple, QBasic-inspired graphics programming language for Linux. Write `.hgl` files, run them with the `hgl` executable — nothing else required.
 
 ---
 
