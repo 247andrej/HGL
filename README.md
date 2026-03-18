@@ -199,7 +199,7 @@ var int ballYv 4
 2
 choice !GUIshouldclose = 0 -> 1
 gui update
-gui clear black
+gui clear niceblue
 gui key w held -> 10
     change plY sub !plVel
     change plYb sub !plVel
