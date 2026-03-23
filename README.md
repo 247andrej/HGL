@@ -1,5 +1,5 @@
 # HGL — Hyperpower Graphics Language
-A simple, QBasic-inspired graphics programming language for Linux. Write `.hgl` files, run them with the `hgl` executable — nothing else required.
+A simple, QBasic-inspired graphics programming language for Linux. Write `.hgl` files, run them with the `hgl` executable — no Python required.
 
 ---
 
@@ -20,33 +20,18 @@ hgl myprogram.hgl
 ## Language Overview
 HGL is line-based — one instruction per line. No semicolons, no brackets, no noise.
 
+**Variable access operators:**
 - `!var` — get a variable's value
 - `@list[0]` — get a list item by index
 - `@func{arg}` — get a function argument value
+- `@dict(key)` — get a dict value by key
 - `$var` — get the length of a list or string (returns length - 1, index-friendly)
-- Line numbers are optional, but required for `goto` and `choice` jumps
+- `~!var` — get the ASCII value of a character
+- `value<-i` — cast value to int
+- `value<-f` — cast value to float
+- `"string"` — inline string literal
 
-```
-gui setup 400 400 MyWindow
-var int x 200
-var int y 200
-
-20
-choice !GUIshouldclose = 0 -> 10
-    gui clear niceblue
-    gui update
-    draw circle !x !y 25 green
-    gui key left held -> 30
-        change x sub 3
-    30
-    gui key right held -> 31
-        change x add 3
-    31
-    gui end
-    goto 20
-10
-gui close
-```
+Line numbers are optional but required for `goto` and `choice` jumps.
 
 ---
 
@@ -105,16 +90,37 @@ endf
 call myFunc
 call myFuncWithArgs <- 10 20
 ```
-All variables are global — function arguments are accessed with `@funcName{argName}` syntax.
 
 ### Lists
 ```
 var list items apple banana cherry
-var int i 0
-show @items[0]          # prints: apple
-show $items             # prints: 2 (last valid index)
-edit items change 1 grape
-edit items remove 0
+show @items[0]
+show $items
+edit list items change 1 grape
+edit list items remove 0
+```
+
+### File I/O
+```
+file txt create notes
+file txt write notes
+hello world
+endfw
+
+file txt read notes -> myVar
+show !myVar
+
+file json create data
+file json write data
+{
+    "score": 0,
+    "name": "player"
+}
+endfw
+
+file json read data -> saveData
+show @saveData(score)
+edit dict saveData change score 100<-i
 ```
 
 ### GUI
@@ -126,8 +132,11 @@ edit items remove 0
 | `gui close` | Close the window |
 | `gui clear color` | Fill background |
 | `gui color name hexvalue` | Define a custom color from a hex integer |
+| `gui goto x y` | Move the window to a screen position |
 | `gui key a held -> N` | Jump to N if key is NOT held |
 | `gui key space notheld -> N` | Jump to N if key IS held |
+| `gui mouse left held -> N` | Jump to N if mouse button is NOT held |
+| `gui check recs x1 y1 w1 h1 x2 y2 w2 h2 -> N` | Jump to N if rectangles are NOT colliding |
 
 ### Drawing
 | Syntax | Description |
@@ -146,16 +155,11 @@ edit items remove 0
 | Variable | Description |
 |---|---|
 | `!GUIshouldclose` | `1` when the window X button is clicked |
+| `!mouseX` | Current mouse X position |
+| `!mouseY` | Current mouse Y position |
 
 ### Built-in Colors
 `black`, `white`, `blue`, `green`, `gray`, `brown`, `purple`, `darkgreen`, `darkgray`, `darkbrown`, `darkpurple`, `niceblue`
-
-### Custom Colors
-```
-gui color mycolor 324234423
-gui clear mycolor
-draw circle 200 200 50 mycolor
-```
 
 ---
 
@@ -174,14 +178,18 @@ choice !i < $items -> 20
 20
 ```
 
-### Functions with Arguments
+### Save File with JSON
 ```
-define func greet <- name
-    show @greet{name}
-endf
+file json create save
+file json write save
+{
+    "score": 0
+}
+endfw
 
-call greet <- world
-call greet <- HGL
+file json read save -> saveData
+show @saveData(score)
+edit dict saveData change score 999<-i
 ```
 
 ### Pong
@@ -199,7 +207,7 @@ var int ballYv 4
 2
 choice !GUIshouldclose = 0 -> 1
 gui update
-gui clear niceblue
+gui clear black
 gui key w held -> 10
     change plY sub !plVel
     change plYb sub !plVel
@@ -224,9 +232,7 @@ choice !ballX > 590 -> 22
 choice !ballX < 0 -> 23
     goto 1
 23
-choice !ballX < 50 -> 24
-choice !ballY > !plY -> 24
-choice !ballY < !plYb -> 24
+gui check recs !plX !plY 20 80 !ballX !ballY 20 20 -> 24
     change ballXv mul -1
 24
 gui end
