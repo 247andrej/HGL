@@ -228,7 +228,6 @@ choice !i < $a -> 1
         choice !i = $a -> 2
             show same
             goto 3
-        goto 2
 1
 show not the same
 3
@@ -262,16 +261,16 @@ draw rect !plX !plY 20 80 white
 draw circle !ballX !ballY 10 white
 change ballX add !ballXv
 change ballY add !ballYv
-choice !ballY > 390 -> 20
+choice !ballY > 390<-i -> 20
     change ballYv mul -1
 20
-choice !ballY < 10 -> 21
+choice !ballY < 10<-i -> 21
     change ballYv mul -1
 21
-choice !ballX > 590 -> 22
+choice !ballX > 590<-i -> 22
     change ballXv mul -1
 22
-choice !ballX < 0 -> 23
+choice !ballX < 0<-i -> 23
     goto 1
 23
 gui check recs !plX !plY 20 80 !ballX !ballY 20 20 -> 24
