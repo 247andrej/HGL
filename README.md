@@ -29,9 +29,13 @@ HGL is line-based — one instruction per line. No semicolons, no brackets, no n
 - `~!var` — get the ASCII value of a character
 - `value<-i` — cast value to int
 - `value<-f` — cast value to float
+- `var<-w` — get width of a texture variable
+- `var<-h` — get height of a texture variable
 - `"string"` — inline string literal
 
 Line numbers are optional but required for `goto` and `choice` jumps.
+
+> **Note:** When comparing against literal numbers with `choice`, use `<-i` to cast them to int — e.g. `choice !GUIshouldclose = 0<-i -> 1`. Without it, the literal `0` is treated as a string and the comparison will always fail.
 
 ---
 
@@ -44,11 +48,18 @@ Line numbers are optional but required for `goto` and `choice` jumps.
 | `var double name value` | Float variable |
 | `var char name value` | String variable |
 | `var list name a b c ...` | List variable |
+| `var text name ./path.png` | Load a texture from file |
+| `var utext name` | Unload a texture from memory |
 | `warp name int` | Convert variable to int |
 | `warp name float` | Convert variable to float |
 | `warp name char` | Convert variable to string |
 | `del varName` | Delete a variable from memory |
 | `show !var` | Print value to terminal |
+
+Add `*` at the end of a `var` declaration to force all values to resolve as variables:
+```
+var int w a<-w *
+```
 
 ### Math & Operations
 `change varName operation value`
@@ -120,7 +131,7 @@ endfw
 
 file json read data -> saveData
 show @saveData(score)
-edit dict saveData change score 100<-i
+edit dict saveData change score 999<-i
 ```
 
 ### GUI
@@ -133,6 +144,10 @@ edit dict saveData change score 100<-i
 | `gui clear color` | Fill background |
 | `gui color name hexvalue` | Define a custom color from a hex integer |
 | `gui goto x y` | Move the window to a screen position |
+| `gui resize w h` | Resize the window |
+| `gui ek key` | Change the exit key (default: escape) |
+| `gui change tex width value` | Set texture width |
+| `gui change tex height value` | Set texture height |
 | `gui key a held -> N` | Jump to N if key is NOT held |
 | `gui key space notheld -> N` | Jump to N if key IS held |
 | `gui mouse left held -> N` | Jump to N if mouse button is NOT held |
@@ -145,6 +160,10 @@ edit dict saveData change score 100<-i
 | `draw rect x y width height color` | Draw a rectangle |
 | `draw line x1 y1 x2 y2 color` | Draw a line |
 | `draw text string x y size color` | Draw text |
+| `draw texture !tex x y` | Draw a texture |
+| `draw texture !tex x y color` | Draw a texture with tint |
+| `draw textureEx !tex x y rotation scale` | Draw a texture with rotation and scale |
+| `draw textureEx !tex x y rotation scale color` | Draw a texture with rotation, scale, and tint |
 
 ### Utility
 | Syntax | Description |
@@ -165,31 +184,54 @@ edit dict saveData change score 100<-i
 
 ## Examples
 
-### List Iteration
+### Texture with proportional scaling
 ```
-var list items apple banana cherry
+gui setup 400 400 demo
+
+var text img ./sprite.png
+
+var int w img<-w *
+var int h img<-h *
+
+change w div 2
+change h div 2
+
+gui change img width !w
+gui change img height !h
+
+2
+choice !GUIshouldclose = 0<-i -> 1
+gui update
+gui clear black
+draw texture !img 0 0
+gui end
+goto 2
+1
+gui close
+```
+
+### String comparison
+```
+var char a hello
+var char b hello
+
 var int i 0
+var int areTheSame 0
 
-10
-choice !i < $items -> 20
-    show @items[!i]
-    change i add 1
-    goto 10
-20
-```
+choice $a < $b -> 1
+choice $a > $b -> 1
 
-### Save File with JSON
-```
-file json create save
-file json write save
-{
-    "score": 0
-}
-endfw
-
-file json read save -> saveData
-show @saveData(score)
-edit dict saveData change score 999<-i
+2
+choice !i < $a -> 1
+    choice ~@a[!i] = ~@b[!i] -> 1
+        change i add 1
+        choice !i = $a -> 2
+            show same
+            goto 3
+        goto 2
+1
+show not the same
+3
 ```
 
 ### Pong
@@ -205,7 +247,7 @@ var int ballXv 4
 var int ballYv 4
 
 2
-choice !GUIshouldclose = 0 -> 1
+choice !GUIshouldclose = 0<-i -> 1
 gui update
 gui clear black
 gui key w held -> 10
