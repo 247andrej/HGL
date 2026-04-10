@@ -1,8 +1,8 @@
 # HGL - Hyperpower Graphics Language
 
-A QBasic-inspired graphics programming language written in Python, powered by [Raylib](https://www.raylib.com/).
+A QBasic-inspired graphics programming language powered by [Raylib](https://www.raylib.com/).
 
-HGL is designed for simple 2D graphics programs — draw shapes, handle input, render textures, and build small games using a straightforward command-based syntax.
+HGL is designed for simple 2D graphics programs — draw shapes, handle input, render textures, play sounds, and build small games using a straightforward command-based syntax.
 
 ## Usage
 
@@ -22,11 +22,12 @@ var double y 3.14
 var char name Hello
 var list items 1 2 3
 var text sprite ./player.png
+var sound jump ./jump.wav
 ```
 
-**Types:** `int`, `double`, `char`, `list`, `text` (texture), `utext` (unload texture)
+**Types:** `int`, `double`, `char`, `list`, `text` (texture), `utext` (unload texture), `sound`
 
-### Variable Resolution
+### Token Resolution
 
 | Prefix/Suffix | Meaning | Example |
 |---|---|---|
@@ -35,11 +36,17 @@ var text sprite ./player.png
 | `@name{key}` | Function argument | `@myFunc{arg1}` |
 | `~` | Char to ASCII code | `~!letter` |
 | `$` | Length - 1 | `$items` |
-| `"text"` | String literal | `"hello"` |
 | `<-f` | Cast to float | `!x<-f` |
 | `<-i` | Cast to int | `!y<-i` |
 | `<-w` | Texture width | `sprite<-w` |
 | `<-h` | Texture height | `sprite<-h` |
+| `int(...)` | Inline int cast | `int(!x)` |
+| `dbl(...)` | Inline float cast | `dbl(!x)` |
+| `chr(...)` | Inline string cast | `chr(!x)` |
+| `type(...)` | Get type name | `type(!x)` |
+| `strip(...)` | Strip whitespace | `strip(!name)` |
+| `key(name)` | Key held check | `key(space)` |
+| `inp()` | Read stdin line | `inp()` |
 
 ### Output
 
@@ -55,6 +62,7 @@ change x sub 1
 change x mul 2
 change x div 3
 change x mod 2
+change x set 100
 change x random 1 10
 change x sin !angle
 change x cos !angle
@@ -77,6 +85,22 @@ choice !x > 5 <- 3
 Comparators: `=`, `<`, `>` (numeric only for `<` and `>`)
 
 Arrow `->` jumps to a label. Arrow `<-` jumps by a relative offset.
+
+### Switch Statements
+
+```
+switch !x
+    case 1
+        show "one"
+    endc
+    case 2
+        show "two"
+    endc
+    case 3
+        show "three"
+    endc
+ends
+```
 
 ### Labels & Goto
 
@@ -203,7 +227,7 @@ draw texture !mySprite 100 100
 draw textureEx !mySprite 100 100 0.0 2.0 white
 
 gui end
-choice !GUIshouldclose = 0 -> 100
+choice !GUIshouldclose = 1<-i -> 100
 
 gui close
 ```
@@ -258,6 +282,14 @@ gui check recs !x1 !y1 !w1 !h1 !x2 !y2 !w2 !h2 -> 500
 ```
 gui change mySprite width 64
 gui change mySprite height 64
+```
+
+### Sound
+
+```
+gui sound init
+var sound jump ./jump.wav
+gui sound play jump
 ```
 
 ---
